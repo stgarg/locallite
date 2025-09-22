@@ -1,0 +1,108 @@
+# .NET build outputs
+[Bb]in/
+[Oo]bj/
+*.dll
+*.exe
+*.pdb
+*.deps.json
+*.runtimeconfig.json
+
+# VS / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.sln
+*.vcxproj
+*.vcxproj.filters
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Model artifacts (optionally large) 
+models/**/*.onnx
+models/**/*.int8.onnx
+models/**/*.bin
+models/**/*.safetensors
+models/**/*.pt
+models/**/*.pth
+models/**/model.* 
+models/**/tokenizer.json
+models/**/tokenizer_config.json
+models/**/config.json
+models/**/vocab.txt
+models/**/HASH_vocab.txt
+*.onnx
+*.bin
+*.safetensors
+
+# Qualcomm SDKs (large, not needed in repo)
+sdks/
+**/sdks/
+
+# Backup and temporary files
+backup/
+**/backup/
+CLEANUP_*.md
+IMPLEMENTATION_*.md
+*_NOTES.md
+
+# Benchmark results (temporary files)
+*benchmark*.json
+*_results.json
+
+# Test artifacts
+test_*.py
+*_test.py
+
+# Previous Rust artifacts (directory removed)
+rust_embedder/
+
+# Qualcomm SDKs (large, not needed in repo)
+sdks/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

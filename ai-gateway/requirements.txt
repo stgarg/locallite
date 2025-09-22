@@ -1,0 +1,21 @@
+# Production AI Gateway Requirements
+# Minimal set of packages for optimal performance
+
+# Core FastAPI
+fastapi>=0.117.0
+uvicorn[standard]>=0.36.0
+pydantic>=2.11.0
+pydantic-settings>=2.10.0
+
+# NPU/CPU inference
+onnxruntime-qnn>=1.22.0
+numpy>=2.3.0
+
+# System monitoring
+psutil>=7.1.0
+
+# File upload support (for future document processing)
+python-multipart>=0.0.20
+
+# Development tools (optional)
+requests>=2.32.0  # For testing API calls
