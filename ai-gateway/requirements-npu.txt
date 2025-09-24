@@ -1,0 +1,8 @@
+# NPU-specific requirements for Qualcomm Snapdragon X development
+# Use this for local development with NPU acceleration
+
+# Replace standard onnxruntime with QNN version for NPU support
+onnxruntime-qnn>=1.22.0
+
+# All other dependencies from requirements.txt are still needed
+-r requirements.txt

@@ -49,6 +49,8 @@ curl -X POST http://localhost:8000/v1/chat/completions \
 - **Memory**: ~12GB for both models
 - **Hardware**: Optimized for Windows ARM64 + NPU
 
+> **Note**: NPU acceleration requires Qualcomm Snapdragon X Elite and `onnxruntime-qnn`. The CI/CD pipeline uses standard `onnxruntime` for compatibility testing.
+
 ## 🛠️ API Endpoints
 
 - `GET /health` - System status
@@ -229,23 +231,23 @@ python secure_benchmark.py
 ```bash
 # 1. Clone repository
 git clone https://github.com/stgarg/locallite.git
-cd locallite
+cd locallite/ai-gateway
 
 # 2. Set up virtual environment
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Linux/Mac
 
-# 3. Download and setup models (REQUIRED)
-# See MODEL_SETUP.md for detailed instructions
-cd EmbeddingServer/scripts
-.\download-bge-model.ps1   # Downloads BGE-small-en-v1.5
-
-# 4. Install dependencies
+# 3. Install dependencies
+# For standard CPU inference:
 pip install -r requirements.txt
 
-# 5. Install SDK in development mode
-cd ../../fastembed-sdk
-pip install -e .
+# For NPU acceleration (Qualcomm Snapdragon X):
+pip install -r requirements-npu.txt
+
+# 4. Download models (see MODEL_SETUP.md for details)
+# Models are required for the server to function
+```
 
 # 5. Set up environment variables
 cp .env.example .env
