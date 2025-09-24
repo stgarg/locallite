@@ -24,6 +24,7 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Union
 
 import uvicorn
+
 # Import our embedding engine and chat router
 from embedding_engine import OptimizedEmbeddingEngine
 from fastapi import Depends, FastAPI, HTTPException, status
