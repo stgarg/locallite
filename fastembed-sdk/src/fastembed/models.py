@@ -64,3 +64,43 @@ class BenchmarkSuite(BaseModel):
     hardware_info: Dict[str, Any]
     results: List[BenchmarkResult]
     summary: Dict[str, Any]
+
+
+# === Chat API Models ===
+
+class ChatMessage(BaseModel):
+    """Individual chat message"""
+    role: str  # "system", "user", "assistant"
+    content: str
+    name: Optional[str] = None
+
+
+class ChatRequest(BaseModel):
+    """Request to chat completions endpoint"""
+    model: str = "gemma-3n-4b"
+    messages: List[ChatMessage]
+    temperature: Optional[float] = 1.0
+    max_tokens: Optional[int] = None
+    top_p: Optional[float] = 1.0
+    frequency_penalty: Optional[float] = 0.0
+    presence_penalty: Optional[float] = 0.0
+    stop: Optional[Union[str, List[str]]] = None
+    stream: Optional[bool] = False
+    user: Optional[str] = None
+
+
+class ChatChoice(BaseModel):
+    """Individual chat completion choice"""
+    index: int
+    message: ChatMessage
+    finish_reason: Optional[str] = None
+
+
+class ChatResponse(BaseModel):
+    """Response from chat completions endpoint"""
+    id: str
+    object: str = "chat.completion"
+    created: int
+    model: str
+    choices: List[ChatChoice]
+    usage: Usage

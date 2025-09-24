@@ -9,7 +9,10 @@ from typing import List, Optional, Union, Dict, Any
 import httpx
 from pydantic import ValidationError
 
-from .models import EmbeddingResponse, EmbeddingRequest, SystemInfo, EmbeddingData, Usage
+from .models import (
+    EmbeddingResponse, EmbeddingRequest, SystemInfo, EmbeddingData, Usage,
+    ChatResponse, ChatRequest, ChatMessage, ChatChoice
+)
 from .exceptions import (
     FastEmbedError,
     FastEmbedConnectionError, 
@@ -69,6 +72,7 @@ class FastEmbedClient:
         
         # OpenAI-style API structure
         self.embeddings = EmbeddingsAPI(self)
+        self.chat = ChatAPI(self)
         
     def __enter__(self):
         return self
@@ -218,6 +222,134 @@ class EmbeddingsAPI:
             return EmbeddingResponse(
                 data=embedding_data,
                 model=model,
+                usage=usage
+            )
+            
+        except ValidationError as e:
+            raise FastEmbedValidationError(f"Invalid response format: {e}")
+
+
+class ChatAPI:
+    """OpenAI-compatible chat completions API"""
+    
+    def __init__(self, client: 'FastEmbedClient'):
+        self._client = client
+        
+    def create(
+        self,
+        model: str = "gemma-3n-4b",
+        messages: List[Dict[str, str]] = None,
+        temperature: Optional[float] = 1.0,
+        max_tokens: Optional[int] = None,
+        top_p: Optional[float] = 1.0,
+        frequency_penalty: Optional[float] = 0.0,
+        presence_penalty: Optional[float] = 0.0,
+        stop: Optional[Union[str, List[str]]] = None,
+        stream: Optional[bool] = False,
+        user: Optional[str] = None,
+    ) -> ChatResponse:
+        """
+        Create chat completion
+        
+        Args:
+            model: Model to use for chat completion
+            messages: List of messages (dicts with 'role' and 'content' keys)
+            temperature: Sampling temperature (0.0 to 2.0)
+            max_tokens: Maximum tokens to generate
+            top_p: Nucleus sampling parameter
+            frequency_penalty: Frequency penalty (-2.0 to 2.0)
+            presence_penalty: Presence penalty (-2.0 to 2.0)
+            stop: Stop sequences
+            stream: Whether to stream responses
+            user: User identifier
+            
+        Returns:
+            ChatResponse: Response containing chat completion
+            
+        Example:
+            ```python
+            response = client.chat.create(
+                model="gemma-3n-4b",
+                messages=[
+                    {"role": "user", "content": "Hello!"}
+                ]
+            )
+            message = response.choices[0].message.content
+            ```
+        """
+        if messages is None:
+            messages = []
+            
+        start_time = time.time()
+        
+        # Validate messages
+        if not messages:
+            raise FastEmbedValidationError("Messages list cannot be empty")
+        
+        # Convert dict messages to ChatMessage objects if needed
+        chat_messages = []
+        for msg in messages:
+            if isinstance(msg, dict):
+                chat_messages.append({
+                    "role": msg.get("role", "user"),
+                    "content": msg.get("content", ""),
+                    "name": msg.get("name")
+                })
+            else:
+                chat_messages.append(msg)
+        
+        # Build request
+        request_data = {
+            "model": model,
+            "messages": chat_messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "top_p": top_p,
+            "frequency_penalty": frequency_penalty,
+            "presence_penalty": presence_penalty,
+            "stop": stop,
+            "stream": stream,
+            "user": user
+        }
+        
+        try:
+            # Make request to chat completions endpoint
+            response = self._client._make_request(
+                "POST",
+                "/v1/chat/completions",
+                json=request_data,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            response_data = response.json()
+            
+            # Build response model
+            choices = []
+            for choice_data in response_data.get("choices", []):
+                message_data = choice_data.get("message", {})
+                choice = ChatChoice(
+                    index=choice_data.get("index", 0),
+                    message=ChatMessage(
+                        role=message_data.get("role", "assistant"),
+                        content=message_data.get("content", ""),
+                        name=message_data.get("name")
+                    ),
+                    finish_reason=choice_data.get("finish_reason")
+                )
+                choices.append(choice)
+            
+            usage_data = response_data.get("usage", {})
+            usage = Usage(
+                prompt_tokens=usage_data.get("prompt_tokens", 0),
+                total_tokens=usage_data.get("total_tokens", 0)
+            )
+            
+            return ChatResponse(
+                id=response_data.get("id", ""),
+                object=response_data.get("object", "chat.completion"),
+                created=response_data.get("created", int(time.time())),
+                model=response_data.get("model", model),
+                choices=choices,
                 usage=usage
             )
             
