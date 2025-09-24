@@ -452,11 +452,7 @@ async def root():
 
 
 if __name__ == "__main__":
-    # Add psutil for health monitoring
-    try:
-        import psutil
-    except ImportError:
-        os.system("pip install psutil")
-        import psutil
+    # psutil is included in requirements.txt for health monitoring
+    import psutil
 
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=False, log_level="info")
