@@ -1,0 +1,9 @@
+{
+    "model": "gemma-3n-4b",
+    "messages": [
+        {
+            "role": "user",
+            "content": "Hello! Can you tell me about NPU acceleration?"
+        }
+    ]
+}
