@@ -24,13 +24,13 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Union
 
 import uvicorn
-
-# Import our embedding engine and chat router
-from embedding_engine import OptimizedEmbeddingEngine
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
+
+# Import our embedding engine and chat router
+from embedding_engine import OptimizedEmbeddingEngine
 from simple_router import ModelRouter, RequestType, UnifiedRequest
 
 # Configure logging

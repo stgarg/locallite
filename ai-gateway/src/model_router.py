@@ -10,13 +10,13 @@ from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 
 import uvicorn
-
-# Import our embedding engine
-from embedding_engine import EmbeddingEngine
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
+
+# Import our embedding engine
+from embedding_engine import EmbeddingEngine
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

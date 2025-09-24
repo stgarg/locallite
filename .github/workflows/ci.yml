@@ -31,7 +31,7 @@ jobs:
       run: |
         pip install black isort
         black --check ai-gateway/src/
-        isort --check-only ai-gateway/src/
+        isort --profile black --check-only ai-gateway/src/
     
     - name: Type check with mypy
       run: |
