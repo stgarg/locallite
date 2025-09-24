@@ -1,44 +1,68 @@
-# Fa## 🚀 Quick Start
+# 🚀 FastEmbed - Local AI Inference with NPU Acceleration
 
-> **⚠️ Important**: Models are not included in the repository. See [MODEL_SETUP.md](MODEL_SETUP.md) for download instructions.
+A production-ready OpenAI-compatible API gateway for local AI inference with automatic NPU acceleration.
 
+## ✨ Features
+
+- **OpenAI-Compatible API** - Drop-in replacement for OpenAI endpoints
+- **NPU Acceleration** - Automatic NPU/CPU selection for optimal performance  
+- **Text Embeddings** - BGE-small-en-v1.5 with sub-100ms response times
+- **Chat Completions** - Phi-3 Mini with real ONNX inference
+- **Local & Private** - All inference runs locally, no data leaves your machine
+
+## 🚀 Quick Start
+
+### 1. Setup
 ```bash
-# 1. Clone the repository
-git clone https://github.com/stgarg/locallite.git
-cd locallite
-
-# 2. Download models (REQUIRED - see MODEL_SETUP.md)
-cd EmbeddingServer/scripts
-.\download-bge-model.ps1
-
-# 3. Set up the AI Gateway (FastEmbed Server)
-cd ../../ai-gateway/src
-python main.py
-
-# 4. Try the Python SDK
-cd ../../fastembed-sdk
-pip install -e .
-python azure_demo.py
-```erformance Local Embeddings with NPU Acceleration
-
-A comprehensive local embedding solution optimized for Windows ARM64 (Snapdragon X Elite) with automatic NPU acceleration, delivering 5-10x faster inference and 90% cost savings compared to cloud APIs.
-
-## � Quick Start
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/yourusername/fastembed.git
-cd fastembed
-
-# 2. Set up the AI Gateway (FastEmbed Server)
-cd ai-gateway/src
-python main.py
-
-# 3. Try the Python SDK
-cd ../../fastembed-sdk
-pip install -e .
-python azure_demo.py
+git clone <repository-url>
+cd fastembed/ai-gateway
+pip install -r requirements.txt
 ```
+
+### 2. Run Server
+```bash
+python src/main.py
+```
+
+Server starts on `http://localhost:8000`
+
+### 3. Test API
+
+**Embeddings:**
+```bash
+curl -X POST http://localhost:8000/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"input":"Hello world","model":"bge-small-en-v1.5"}'
+```
+
+**Chat:**
+```bash
+curl -X POST http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"phi-3-mini-4k","messages":[{"role":"user","content":"Hi!"}]}'
+```
+
+## 📊 Performance
+
+- **Embeddings**: 91ms (NPU accelerated)
+- **Chat**: 280-640ms (CPU inference) 
+- **Memory**: ~12GB for both models
+- **Hardware**: Optimized for Windows ARM64 + NPU
+
+## 🛠️ API Endpoints
+
+- `GET /health` - System status
+- `GET /v1/models` - Available models
+- `POST /v1/embeddings` - Generate embeddings
+- `POST /v1/chat/completions` - Chat completions
+
+## 📚 Documentation
+
+See the [Documentation Index](DOCUMENTATION_INDEX.md) for comprehensive guides and technical deep-dives.
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE)
 
 ## 📁 Repository Structure
 

@@ -11,6 +11,9 @@ pydantic-settings>=2.10.0
 onnxruntime-qnn>=1.22.0
 numpy>=2.3.0
 
+# Model downloads
+huggingface_hub>=0.26.0
+
 # System monitoring
 psutil>=7.1.0
 
