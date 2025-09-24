@@ -84,6 +84,26 @@ CLEANUP_*.md
 IMPLEMENTATION_*.md
 *_NOTES.md
 
+# Documentation and learning files (keep local, not in repo)
+docs/learnings/
+docs/planning/
+docs/sessions/
+*ANALYSIS*.md
+*LEARNINGS*.md
+*NPU*.md
+*SESSION*.md
+*PLAN*.md
+*ARCHITECTURE*.md
+*OPTION*.md
+*STORY*.md
+*PRD*.md
+*IMPLEMENTATION*.md
+*COMPONENT*.md
+*ENDPOINT*.md
+*MODEL*.md
+*GITHUB*.md
+*DOCUMENTATION*.md
+
 # Benchmark results (temporary files)
 *benchmark*.json
 *_results.json
