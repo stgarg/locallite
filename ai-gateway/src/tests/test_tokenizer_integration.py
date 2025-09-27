@@ -35,7 +35,9 @@ def test_embedding_backend_reports_token_stats():
     assert "p50_tokens_per_text" in perf
     assert "p95_tokens_per_text" in perf
     assert "tokens_per_text" in perf and isinstance(perf["tokens_per_text"], list)
-    assert perf["p50_tokens_per_text"] <= perf["p95_tokens_per_text"], "Percentile ordering violated"
+    assert (
+        perf["p50_tokens_per_text"] <= perf["p95_tokens_per_text"]
+    ), "Percentile ordering violated"
     # Expect HF tokenizer yields >= whitespace heuristic tokens
     # whitespace baseline counts
     whitespace_counts = [len(t.split()) for t in texts]

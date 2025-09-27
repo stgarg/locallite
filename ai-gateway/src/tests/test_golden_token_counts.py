@@ -6,6 +6,7 @@ from runtime.model_registry import get_model
 
 try:
     from transformers import AutoTokenizer  # type: ignore
+
     _TRANSFORMERS = True
 except Exception:  # pragma: no cover
     _TRANSFORMERS = False
@@ -37,7 +38,9 @@ def test_golden_token_counts_stable():
     assert spec is not None
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
     model_dir = os.path.join(repo_root, spec.path)
-    if not os.path.isdir(model_dir):  # pragma: no cover - environment without model assets
+    if not os.path.isdir(
+        model_dir
+    ):  # pragma: no cover - environment without model assets
         pytest.skip("Model directory not present; skipping golden token test")
 
     backend = OnnxEmbeddingBackend(spec.model_id, model_dir, spec.dimension)
@@ -46,22 +49,22 @@ def test_golden_token_counts_stable():
     perf = backend.last_perf() or {}
 
     observed_list = perf.get("tokens_per_text")
-    assert isinstance(observed_list, list) and len(observed_list) == len(GOLDEN_TOKENS_PER_TEXT), (
-        "tokens_per_text missing or length mismatch; update backend perf emission or golden corpus"
-    )
+    assert isinstance(observed_list, list) and len(observed_list) == len(
+        GOLDEN_TOKENS_PER_TEXT
+    ), "tokens_per_text missing or length mismatch; update backend perf emission or golden corpus"
 
     # Per-text strict match (can relax later by allowing drift threshold)
     diffs = [abs(a - b) for a, b in zip(observed_list, GOLDEN_TOKENS_PER_TEXT)]
     max_diff = max(diffs)
-    assert max_diff <= ALLOWED_PER_TEXT_DRIFT, (
-        f"Per-text token drift detected: observed={observed_list} expected={GOLDEN_TOKENS_PER_TEXT} diffs={diffs}"
-    )
+    assert (
+        max_diff <= ALLOWED_PER_TEXT_DRIFT
+    ), f"Per-text token drift detected: observed={observed_list} expected={GOLDEN_TOKENS_PER_TEXT} diffs={diffs}"
 
     observed_total = perf.get("total_tokens")
     assert isinstance(observed_total, (int, float)), "total_tokens missing from perf"
     assert abs(observed_total - GOLDEN_TOTAL) <= ALLOWED_TOTAL_DRIFT, (
         f"Total token drift detected: observed={observed_total} expected={GOLDEN_TOTAL}. "
-        f"If tokenizer or preprocessing intentionally changed, update GOLDEN_TOKENS_PER_TEXT." 
+        f"If tokenizer or preprocessing intentionally changed, update GOLDEN_TOKENS_PER_TEXT."
     )
 
     # Distribution sanity
