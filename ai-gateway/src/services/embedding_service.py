@@ -54,6 +54,7 @@ class EmbeddingService:
             return True
         except Exception as e:
             logger.error(f"❌ Failed to initialize EmbeddingService: {e}")
+            self._is_initialized = False
             return False
 
     async def process_embeddings(
@@ -85,7 +86,7 @@ class EmbeddingService:
             if len(texts) > 100:  # Reasonable batch limit
                 raise ValueError(f"Batch size {len(texts)} exceeds maximum of 100")
 
-            # Process embeddings with automatic NPU/CPU routing
+            # Process embeddings with automatic provider routing
             embeddings_array, performance_info = self.engine.encode(texts)
 
             # Convert numpy arrays to lists and handle any failures
@@ -123,19 +124,10 @@ class EmbeddingService:
             )
 
         except Exception as e:
-            # Handle catastrophic failures
+            # Handle catastrophic failures: do NOT fabricate embeddings; surface error cleanly
             processing_time_ms = (time.time() - start_time) * 1000
-            logger.error(f"Critical error in embedding processing: {e}")
-
-            return EmbeddingResult(
-                embeddings=[None] * len(texts),
-                tokens=0,
-                model_used=model,
-                provider_used="error",
-                processing_time_ms=processing_time_ms,
-                errors=[str(e)] * len(texts),
-                performance_info={"error": str(e)},
-            )
+            logger.exception(f"Critical error in embedding processing: {e}")
+            raise
 
     def get_model_info(self) -> Dict[str, Any]:
         """Get model information and capabilities"""

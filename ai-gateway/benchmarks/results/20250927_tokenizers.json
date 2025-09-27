@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-09-27T12:54:14Z",
+  "runs": 1,
+  "discard_warmup": 0,
+  "inputs": 32,
+  "hf_model": "BAAI/bge-small-en-v1.5",
+  "modes": [
+    {
+      "mode": "heuristic_whitespace",
+      "total_texts": 32,
+      "total_chars": 1681,
+      "total_tokens": 237,
+      "mean_tokens_per_text": 7.40625,
+      "mean_ms_per_text": 0.0007176251983764814,
+      "p50_ms_per_text": 0.0005969995982013643,
+      "p95_ms_per_text": 0.0014265522622736169,
+      "throughput_texts_per_sec": 881980.0646345377
+    },
+    {
+      "mode": "hf_fast",
+      "total_texts": 32,
+      "total_chars": 1681,
+      "total_tokens": 445,
+      "mean_tokens_per_text": 13.90625,
+      "mean_ms_per_text": 0.31212284307002847,
+      "p50_ms_per_text": 0.04153799818595871,
+      "p95_ms_per_text": 0.09046100276464128,
+      "throughput_texts_per_sec": 3197.0797876035017
+    }
+  ]
+}

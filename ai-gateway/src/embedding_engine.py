@@ -7,10 +7,15 @@ import json
 import logging
 import os
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 import numpy as np
 import onnxruntime as ort
+
+try:  # Optional dependency for accurate tokenization
+    from transformers import AutoTokenizer  # type: ignore
+except Exception:  # pragma: no cover
+    AutoTokenizer = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -24,17 +29,23 @@ class OptimizedEmbeddingEngine:
     - CPU: 4+ texts (more efficient for larger batches)
     """
 
-    def __init__(self, model_path: str):
+    def __init__(self, model_path: str, model_id: Optional[str] = None, max_length: int = 512):
         self.model_path = model_path
+        self.model_id = model_id
+        self.max_length = max_length
         self.session_cpu = None
         self.session_npu = None
         self.vocab = None
         self.config = None
+        self._tokenizer = None
+        self._tokenizer_name = None
+        self._last_perf: Dict[str, Any] | None = None
 
         # Performance thresholds (based on benchmarking)
         self.NPU_OPTIMAL_BATCH_SIZE = 3
 
         self._load_model_assets()
+        self._init_tokenizer()
         self._initialize_sessions()
 
     def _load_model_assets(self):
@@ -56,64 +67,139 @@ class OptimizedEmbeddingEngine:
                 logger.info(f"Loaded vocabulary: {len(self.vocab)} tokens")
 
     def _initialize_sessions(self):
-        """Initialize ONNX Runtime sessions with automatic fallback"""
+        """Initialize ONNX Runtime sessions with WSL ARM64 optimizations"""
         model_file = os.path.join(self.model_path, "model.onnx")
 
         if not os.path.exists(model_file):
             raise FileNotFoundError(f"Model file not found: {model_file}")
 
-        # CPU session (always available as fallback)
+        # Create ARM64 optimized session options
+        def create_optimized_options(provider_specific: bool = False):
+            session_opts = ort.SessionOptions()
+            session_opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            session_opts.execution_mode = ort.ExecutionMode.ORT_PARALLEL
+            
+            # ARM64 threading optimization
+            import psutil
+            cpu_cores = psutil.cpu_count(logical=False) or 4
+            session_opts.intra_op_num_threads = cpu_cores
+            session_opts.inter_op_num_threads = 2
+            
+            # Memory optimizations
+            session_opts.enable_cpu_mem_arena = True
+            session_opts.enable_mem_pattern = True
+            
+            if provider_specific:
+                session_opts.add_session_config_entry("session.intra_op.allow_spinning", "1")
+                session_opts.add_session_config_entry("session.force_spinning_stop", "1")
+                
+            return session_opts
+
+        # CPU session (ARM64 optimized)
         try:
+            cpu_opts = create_optimized_options()
             self.session_cpu = ort.InferenceSession(
-                model_file, providers=["CPUExecutionProvider"]
+                model_file, providers=["CPUExecutionProvider"], sess_options=cpu_opts
             )
-            logger.info("✅ CPU session initialized")
+            logger.info("✅ ARM64 optimized CPU session initialized")
         except Exception as e:
             logger.error(f"❌ Failed to initialize CPU session: {e}")
             raise
 
-        # NPU session (optional, with graceful fallback)
+        # Try Azure provider for additional optimization
         try:
-            self.session_npu = ort.InferenceSession(
-                model_file, providers=["QNNExecutionProvider", "CPUExecutionProvider"]
+            azure_opts = create_optimized_options(provider_specific=True)
+            azure_session = ort.InferenceSession(
+                model_file, providers=["AzureExecutionProvider", "CPUExecutionProvider"],
+                sess_options=azure_opts
             )
 
-            # Verify QNN provider is actually being used
-            actual_providers = self.session_npu.get_providers()
-            if "QNNExecutionProvider" in actual_providers:
-                logger.info("✅ NPU session initialized with QNN provider")
+            # Check if Azure provider is actually active
+            actual_providers = azure_session.get_providers()
+            if "AzureExecutionProvider" in actual_providers:
+                self.session_npu = azure_session  # Use as alternative to NPU
+                logger.info("✅ Azure provider session initialized (NPU alternative)")
             else:
-                logger.warning("⚠️  QNN provider not available, NPU disabled")
+                logger.info("⚠️  Azure provider not active, using CPU only")
                 self.session_npu = None
 
         except Exception as e:
-            logger.warning(f"⚠️  NPU initialization failed: {e}")
+            logger.warning(f"⚠️  Azure provider initialization failed: {e}")
             self.session_npu = None
 
-    def _tokenize(self, text: str, max_length: int = 512) -> Dict[str, np.ndarray]:
-        """Optimized tokenization for BERT-based models"""
-        # Simple but effective tokenization
-        tokens = ["[CLS]"] + text.lower().split()[: max_length - 2] + ["[SEP]"]
+    def _init_tokenizer(self):
+        """Initialize HF fast tokenizer if available; fall back to legacy heuristic.
 
-        # Convert to token IDs using vocabulary
-        if self.vocab:
-            token_ids = [
-                self.vocab.get(token, self.vocab.get("[UNK]", 0)) for token in tokens
-            ]
+        Preference order:
+        1. Local tokenizer files in model directory (tokenizer.json / tokenizer.model)
+        2. AutoTokenizer.from_pretrained(model_id)
+        3. Legacy whitespace heuristic (only for emergency fallback)
+        """
+        if AutoTokenizer is None:
+            logger.warning("HF transformers not installed; using legacy whitespace heuristic tokenizer")
+            return
+        # Try local directory first
+        local_dir = self.model_path
+        use_source = None
+        try:
+            if os.path.exists(os.path.join(local_dir, "tokenizer.json")) or os.path.exists(os.path.join(local_dir, "tokenizer.model")):
+                self._tokenizer = AutoTokenizer.from_pretrained(local_dir, local_files_only=True, trust_remote_code=False)
+                use_source = local_dir
+            elif self.model_id:
+                self._tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=False)
+                use_source = self.model_id
+            if self._tokenizer is not None and not getattr(self._tokenizer, "is_fast", False):
+                logger.warning("Loaded tokenizer is not a fast tokenizer; performance may degrade")
+            if self._tokenizer:
+                self._tokenizer_name = use_source
+                logger.info(f"Initialized tokenizer from {use_source}")
+        except Exception as e:  # pragma: no cover
+            logger.warning(f"Failed to initialize HF tokenizer ({e}); falling back to whitespace heuristic")
+            self._tokenizer = None
+
+    def _tokenize_batch(self, texts: List[str]) -> Dict[str, np.ndarray]:
+        """Tokenize a batch of texts returning numpy arrays shaped (batch, seq_len)."""
+        max_length = self.max_length
+        if self._tokenizer:
+            encoded = self._tokenizer(
+                texts,
+                padding="max_length",
+                truncation=True,
+                max_length=max_length,
+                return_attention_mask=True,
+                return_tensors=None,
+            )
+            input_ids = np.array(encoded["input_ids"], dtype=np.int64)
+            attention_mask = np.array(encoded["attention_mask"], dtype=np.int64)
+            if "token_type_ids" in encoded:
+                token_type_ids = np.array(encoded["token_type_ids"], dtype=np.int64)
+            else:
+                token_type_ids = np.zeros_like(input_ids)
         else:
-            # Fallback for missing vocab
-            token_ids = [hash(token) % 30000 for token in tokens]
-
-        # Create attention mask and token type IDs
-        seq_len = len(token_ids)
-        attention_mask = [1] * seq_len + [0] * (max_length - seq_len)
-        token_type_ids = [0] * max_length
-        token_ids = token_ids + [0] * (max_length - seq_len)
-
+            # Legacy heuristic per text
+            batch_ids = []
+            batch_mask = []
+            batch_type = []
+            for text in texts:
+                tokens = ["[CLS]"] + text.lower().split()[: max_length - 2] + ["[SEP]"]
+                if self.vocab:
+                    token_ids = [self.vocab.get(t, self.vocab.get("[UNK]", 0)) for t in tokens]
+                else:
+                    token_ids = [hash(t) % 30000 for t in tokens]
+                seq_len = len(token_ids)
+                pad = max_length - seq_len
+                token_ids = token_ids + [0] * pad
+                attention_mask = [1] * seq_len + [0] * pad
+                batch_ids.append(token_ids)
+                batch_mask.append(attention_mask)
+                batch_type.append([0] * max_length)
+            input_ids = np.array(batch_ids, dtype=np.int64)
+            attention_mask = np.array(batch_mask, dtype=np.int64)
+            token_type_ids = np.array(batch_type, dtype=np.int64)
         return {
-            "input_ids": np.array([token_ids], dtype=np.int64),
-            "attention_mask": np.array([attention_mask], dtype=np.int64),
-            "token_type_ids": np.array([token_type_ids], dtype=np.int64),
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "token_type_ids": token_type_ids,
         }
 
     def _select_optimal_provider(
@@ -122,14 +208,16 @@ class OptimizedEmbeddingEngine:
         """
         Automatically select optimal provider based on batch size
 
-        Rules based on empirical benchmarking:
-        - Batch 1-3: NPU (up to 2.33x speedup)
-        - Batch 4+:  CPU (more efficient for larger batches)
+        Rules optimized for WSL ARM64:
+        - Batch 1-3: CPU-ARM64 (optimized single/small batch performance)  
+        - Batch 4+:  Azure Provider (if available, otherwise CPU)
         """
-        if batch_size <= self.NPU_OPTIMAL_BATCH_SIZE and self.session_npu:
-            return self.session_npu, "NPU"
+        if batch_size <= self.NPU_OPTIMAL_BATCH_SIZE:
+            return self.session_cpu, "CPU-ARM64"
+        elif self.session_npu:
+            return self.session_npu, "Azure"
         else:
-            return self.session_cpu, "CPU"
+            return self.session_cpu, "CPU-ARM64"
 
     def encode(self, texts: List[str]) -> Tuple[np.ndarray, Dict[str, any]]:
         """
@@ -149,36 +237,53 @@ class OptimizedEmbeddingEngine:
         # Automatic provider selection based on batch size
         session, provider = self._select_optimal_provider(len(texts))
 
-        # Tokenize all texts
+        # Tokenize batch (vectorized where possible)
         tokenize_start = time.time()
-        tokenized_inputs = [self._tokenize(text) for text in texts]
+        batch_inputs = self._tokenize_batch(texts)
         tokenize_time = time.time() - tokenize_start
 
-        # Run inference
+        # Prepare single run inputs
+        run_inputs = {
+            "input_ids": batch_inputs["input_ids"],
+            "attention_mask": batch_inputs["attention_mask"],
+            "token_type_ids": batch_inputs["token_type_ids"],
+        }
+
         inference_start = time.time()
         embeddings = []
-
-        for tokens in tokenized_inputs:
-            try:
-                # Run ONNX inference
-                outputs = session.run(None, tokens)
-
-                # Extract [CLS] token embedding from last hidden state
-                last_hidden_state = outputs[0]  # Shape: (1, seq_len, hidden_size)
-                cls_embedding = last_hidden_state[0, 0, :]  # [CLS] token
-
-                # L2 normalize
-                normalized = cls_embedding / np.linalg.norm(cls_embedding)
-                embeddings.append(normalized)
-
-            except Exception as e:
-                logger.error(f"Inference failed for text: {e}")
-                # Fallback to random normalized embedding
-                fallback = np.random.normal(0, 0.1, 384).astype(np.float32)
-                embeddings.append(fallback / np.linalg.norm(fallback))
+        try:
+            outputs = session.run(None, run_inputs)
+            # Assume outputs[0] shape: (batch, seq_len, hidden_size)
+            last_hidden_state = outputs[0]
+            cls_embeddings = last_hidden_state[:, 0, :]  # (batch, hidden)
+            # L2 normalize each row
+            norms = np.linalg.norm(cls_embeddings, axis=1, keepdims=True)
+            norms[norms == 0] = 1.0
+            embeddings = (cls_embeddings / norms).astype(np.float32)
+        except Exception as e:
+            logger.error(f"Batch inference failed ({e}); falling back to per-text loop")
+            # Fallback to legacy per-text loop (rare path)
+            for i in range(len(texts)):
+                single_inputs = {
+                    k: v[i : i + 1] for k, v in run_inputs.items()
+                }
+                try:
+                    out = session.run(None, single_inputs)
+                    cls = out[0][0, 0, :]
+                    cls = cls / np.linalg.norm(cls)
+                    embeddings.append(cls.astype(np.float32))
+                except Exception:
+                    fallback = np.random.normal(0, 0.1, 384).astype(np.float32)
+                    embeddings.append(fallback / np.linalg.norm(fallback))
+            embeddings = np.vstack(embeddings)
 
         inference_time = time.time() - inference_start
         total_time = time.time() - start_time
+
+        # Token statistics
+        attention_mask = batch_inputs["attention_mask"]
+        total_tokens = int(attention_mask.sum())
+        avg_tokens = total_tokens / len(texts)
 
         # Performance metrics
         performance_info = {
@@ -191,6 +296,9 @@ class OptimizedEmbeddingEngine:
             "throughput_texts_per_sec": (
                 len(texts) / total_time if total_time > 0 else 0
             ),
+            "total_tokens": total_tokens,
+            "avg_tokens_per_text": avg_tokens,
+            "tokenizer": self._tokenizer_name or "heuristic",
         }
 
         logger.debug(
@@ -198,7 +306,11 @@ class OptimizedEmbeddingEngine:
             f"in {total_time*1000:.1f}ms"
         )
 
+        self._last_perf = performance_info
         return np.array(embeddings), performance_info
+
+    def last_performance(self) -> Optional[Dict[str, Any]]:
+        return self._last_perf
 
     def get_model_info(self) -> Dict[str, any]:
         """Get comprehensive model and system information"""
@@ -208,18 +320,24 @@ class OptimizedEmbeddingEngine:
             "vocab_size": len(self.vocab) if self.vocab else None,
             "providers": {
                 "cpu_available": self.session_cpu is not None,
-                "npu_available": self.session_npu is not None,
+                "azure_available": self.session_npu is not None,  # Using session_npu for Azure
                 "cpu_providers": (
                     self.session_cpu.get_providers() if self.session_cpu else None
                 ),
-                "npu_providers": (
+                "azure_providers": (
                     self.session_npu.get_providers() if self.session_npu else None
                 ),
             },
+            "optimization": {
+                "arm64_simd": True,
+                "multi_threading": True,
+                "graph_optimization": "enabled",
+                "wsl_optimized": True,
+            },
             "performance_rules": {
-                "npu_optimal_batch_size": f"1-{self.NPU_OPTIMAL_BATCH_SIZE}",
-                "cpu_optimal_batch_size": f"{self.NPU_OPTIMAL_BATCH_SIZE + 1}+",
-                "selection_logic": "automatic based on batch size",
+                "small_batch_provider": "CPU-ARM64 (1-3 texts)",
+                "large_batch_provider": f"Azure (4+ texts)" if self.session_npu else "CPU-ARM64",
+                "selection_logic": "automatic based on batch size and WSL optimization",
             },
         }
 
@@ -271,3 +389,7 @@ if __name__ == "__main__":
         import traceback
 
         traceback.print_exc()
+
+
+# Alias for backward compatibility
+EmbeddingEngine = OptimizedEmbeddingEngine

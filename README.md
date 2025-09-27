@@ -1,4 +1,4 @@
-# 🚀 FastEmbed - Local AI Inference with NPU Acceleration
+# 🚀 Locallite - Local AI Inference with NPU Acceleration
 
 A production-ready OpenAI-compatible API gateway for local AI inference with automatic NPU acceleration.
 

@@ -14,8 +14,10 @@ def test_import_structure():
     """Test that we can import the main modules"""
     try:
         from main import app
-        from embedding_engine import OptimizedEmbeddingEngine
-        from simple_router import ModelRouter
+        from services.model_service import ModelService
+        from chat.gemma_model import GemmaChatModel
+        assert ModelService  # noqa: B018
+        assert GemmaChatModel  # noqa: B018
         assert True
     except ImportError as e:
         pytest.skip(f"Import failed (expected in CI without models): {e}")

@@ -1,0 +1,5 @@
+A quick brown fox jumps over the lazy dog.
+Deterministic outputs enable confident refactors.
+Unicode café naïve façade jalapeño 💡.
+Code-like snippet: def foo(bar): return bar * 2  # python
+Final concluding input for this benchmark file.

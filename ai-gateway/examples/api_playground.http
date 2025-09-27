@@ -1,0 +1,69 @@
+# REST Client / HTTPie-style playground file
+# Use with VS Code REST Client extension or copy curl commands.
+# Assumes server running: python ai-gateway/src/main.py (default 127.0.0.1:8000)
+
+@host = http://127.0.0.1:8000
+@contentType = application/json
+# @auth = Bearer YOUR_API_KEY   # (Auth currently permissive; placeholder.)
+
+### Root
+GET {{host}}/
+
+### Health
+GET {{host}}/health
+
+### Simple Models (OpenAI-compatible minimal schema)
+GET {{host}}/v1/models
+
+### Registry Models (Extended metadata)
+GET {{host}}/v1/models/registry
+
+### Embeddings - Single Input
+POST {{host}}/v1/embeddings
+Content-Type: {{contentType}}
+
+{
+  "model": "bge-small-en-v1.5",
+  "input": "The quick brown fox jumped over the lazy dog"
+}
+
+### Embeddings - Batch Input
+POST {{host}}/v1/embeddings
+Content-Type: {{contentType}}
+
+{
+  "model": "bge-small-en-v1.5",
+  "input": [
+    "First sample sentence for embedding.",
+    "Second one with a bit more length to test batching.",
+    "Third variant to trigger multi-text logic."
+  ]
+}
+
+### Chat Completion (If model loaded)
+POST {{host}}/v1/chat/completions
+Content-Type: {{contentType}}
+
+{
+  "model": "gemma-3n-4b",
+  "messages": [
+    {"role": "system", "content": "You are a concise assistant."},
+    {"role": "user", "content": "Explain embedding vectors in one sentence."}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 64
+}
+
+### Invalid / Edge Case (Empty embedding input)
+POST {{host}}/v1/embeddings
+Content-Type: {{contentType}}
+
+{
+  "model": "bge-small-en-v1.5",
+  "input": []
+}
+
+### NOTES
+# - If models are not fully initialized, some endpoints may return 500; see /health.
+# - Add an Authorization header if future auth is enabled.
+# - Adjust host if running remotely.

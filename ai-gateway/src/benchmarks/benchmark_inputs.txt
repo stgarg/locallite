@@ -1,0 +1,32 @@
+A quick brown fox jumps over the lazy dog.
+The quick brown fox jumps over the lazy dog.
+The quick brown fox jumped over the lazy dogs.
+Embedding vectors capture semantic meaning of text.
+Latency spikes often signal provider mis-selection.
+Short sentence.
+Another short line.
+Yet another compact phrase.
+This is a medium length sentence for batching behavior observation.
+Provider routing should favor CPU for small batches.
+Provider routing should favor alternative provider for large batches.
+Different wording tests robustness of hashing.
+Hash drift must not occur unless weights or tokenizer change.
+Deterministic outputs enable confident refactors.
+Performance predictability beats raw speed in many practical systems.
+Streaming is not yet benchmarked but will be later.
+Lowercase tokenization heuristic may miscount edge-cases.
+CamelCaseIdentifiersShouldStillSplitReasonably maybe not.
+Numbers 123 456 789 included here.
+Symbols !@#$%^&*() and punctuation, commas, periods.
+A longer paragraph style input begins here and continues with additional tokens to simulate realistic embedding loads for latency distribution measurement under moderate batch conditions.
+Second paragraph like text to simulate variation and test caching strategies in the future phases of the project.
+Edge     spacing   should     collapse logically.
+Tabs	should	not	derail	tokenization.
+Unicode café naïve façade jalapeño 💡.
+Code-like snippet: def foo(bar): return bar * 2  # python
+JSON-like object: {"key": "value", "number": 42}
+Quoted 'text' with "mixed" punctuation—dashes and ellipses...
+Multi-line simulation part 1.
+Multi-line simulation part 2.
+Multi-line simulation part 3.
+Final concluding input for this benchmark file.

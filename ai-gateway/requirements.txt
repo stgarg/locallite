@@ -23,3 +23,24 @@ python-multipart>=0.0.20
 
 # Development tools (optional)
 requests>=2.32.0  # For testing API calls
+# Document Processing Dependencies
+pymupdf>=1.23.0          # PDF processing
+python-docx>=0.8.11      # DOCX processing  
+pytesseract>=0.3.10      # OCR capability
+pillow>=10.0.0           # Image processing
+filetype>=1.2.0          # File type detection
+polars>=0.20.0           # Structured analysis for documents
+tqdm>=4.65.0             # Progress bars for downloads
+
+# Tokenization & Text Generation
+tokenizers>=0.15.2       # HF tokenizer runtime (prebuilt wheels)
+sentencepiece>=0.1.99    # Fallback tokenizer support for Gemma
+transformers>=4.45.0     # Fast tokenizer + future model utilities (now used in embedding engine)
+
+# Future: Audio Processing (Week 3)
+# librosa>=0.10.0          # Audio processing
+# soundfile>=0.12.0        # Audio I/O
+
+# Future: Vision Processing (Week 2)  
+# opencv-python>=4.8.0     # Image preprocessing
+# transformers>=4.30.0     # Tokenization support

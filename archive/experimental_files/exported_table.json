@@ -1,0 +1,51 @@
+{
+  "table_id": 1,
+  "rows": 5,
+  "columns": 2,
+  "position": {
+    "start_y": 592,
+    "end_y": 691
+  },
+  "data": [
+    {
+      "row_number": 1,
+      "cells": [
+        "400"
+      ],
+      "confidence": 65.0,
+      "y_position": 592
+    },
+    {
+      "row_number": 2,
+      "cells": [
+        "200"
+      ],
+      "confidence": 76.0,
+      "y_position": 613
+    },
+    {
+      "row_number": 3,
+      "cells": [
+        "O"
+      ],
+      "confidence": 62.0,
+      "y_position": 641
+    },
+    {
+      "row_number": 4,
+      "cells": [
+        "200"
+      ],
+      "confidence": 81.0,
+      "y_position": 666
+    },
+    {
+      "row_number": 5,
+      "cells": [
+        "400"
+      ],
+      "confidence": 86.0,
+      "y_position": 691
+    }
+  ]
+}

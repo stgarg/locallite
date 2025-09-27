@@ -1,0 +1,15 @@
+{
+  "model_name": "Phi-3 Mini 4K DirectML",
+  "architecture": "phi3",
+  "parameters": "3.8B",
+  "context_length": 4096,
+  "quantization": "int4-awq",
+  "npu_optimized": true,
+  "directml_optimized": true,
+  "provider_priority": [
+    "DmlExecutionProvider",
+    "QNNExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "download_date": "2024-09-24"
+}

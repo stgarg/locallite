@@ -1,8 +1,0 @@
-{
-  "texts": [
-    "Hello world, this is a test.",
-    "AI agents need efficient communication.",
-    "Compact responses save bandwidth."
-  ],
-  "model": "bge-small-en-v1.5"
-}

@@ -1,0 +1,65 @@
+{
+  "model": "bge-small-en-v1.5",
+  "backend": "onnx-custom",
+  "timestamp": "2025-09-27T12:51:01Z",
+  "env": {
+    "python": "3.12.3",
+    "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-aarch64-with-glibc2.39",
+    "machine": "aarch64"
+  },
+  "model_load_time_ms": 565.2515259971551,
+  "scenarios": [
+    {
+      "batch_size": 1,
+      "runs": 4,
+      "mean_ms": 300.65541724979994,
+      "stdev_ms": 23.5471248252906,
+      "p50_ms": 313.0331885004125,
+      "p95_ms": 316.25339790025464,
+      "per_text_mean_ms": 300.65541724979994,
+      "throughput_texts_per_sec": 3.326066794828941,
+      "dimension": 384,
+      "digest": "80c2e365b9cc58dc8f233c2df1a24cf8",
+      "zero_or_nan_count": 0
+    },
+    {
+      "batch_size": 2,
+      "runs": 4,
+      "mean_ms": 629.3275142497805,
+      "stdev_ms": 97.31176346557386,
+      "p50_ms": 606.1121264992835,
+      "p95_ms": 760.8170072002395,
+      "per_text_mean_ms": 314.66375712489025,
+      "throughput_texts_per_sec": 3.1779954867922693,
+      "dimension": 384,
+      "digest": "9a91e2e11cd0fece5c75d06f97c9abdc",
+      "zero_or_nan_count": 0
+    },
+    {
+      "batch_size": 4,
+      "runs": 4,
+      "mean_ms": 1217.7821062505245,
+      "stdev_ms": 74.80462356525832,
+      "p50_ms": 1214.7072400002799,
+      "p95_ms": 1303.9225592021467,
+      "per_text_mean_ms": 304.44552656263113,
+      "throughput_texts_per_sec": 3.28465985784251,
+      "dimension": 384,
+      "digest": "0f88b084b58cfa43267edb59f55d65df",
+      "zero_or_nan_count": 0
+    },
+    {
+      "batch_size": 8,
+      "runs": 4,
+      "mean_ms": 2496.6675760006183,
+      "stdev_ms": 222.6618907282027,
+      "p50_ms": 2430.798269000661,
+      "p95_ms": 2800.724940650798,
+      "per_text_mean_ms": 312.0834470000773,
+      "throughput_texts_per_sec": 3.204271196093756,
+      "dimension": 384,
+      "digest": "e76b2e1b370bdc9ee605b66c571a4dff",
+      "zero_or_nan_count": 0
+    }
+  ]
+}

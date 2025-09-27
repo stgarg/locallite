@@ -1,0 +1,8 @@
+{
+  "messages": [
+    {"role": "user", "content": "What is the benefit of compact API responses for AI agents?"}
+  ],
+  "model": "gemma-3n-4b",
+  "max_tokens": 100,
+  "temperature": 0.7
+}
