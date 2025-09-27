@@ -53,6 +53,7 @@ class EmbeddingBackend(Protocol):
     def tokenize_count(self, text: str) -> int: ...  # noqa: D401
     def last_perf(self) -> Dict[str, Any] | None: ...  # noqa: D401
 
+
 __all__ = [
     "EmbeddingBackend",
     "EmbeddingResult",

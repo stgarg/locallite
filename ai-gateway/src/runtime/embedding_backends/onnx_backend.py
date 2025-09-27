@@ -7,6 +7,7 @@ latency & tokenization overhead (useful in retrieval-heavy workflows).
 from __future__ import annotations
 
 from collections import OrderedDict
+import time
 from typing import Dict, List, Sequence, Tuple
 
 from embedding_engine import OptimizedEmbeddingEngine
@@ -103,7 +104,9 @@ class OnnxEmbeddingBackend:
         return EmbeddingResult(vectors=ordered, perf=perf_out)
 
     def last_perf(self):  # alias for benchmark harness compatibility
-        return self._last_perf or (self._engine.last_performance() if self._engine else None)
+        return self._last_perf or (
+            self._engine.last_performance() if self._engine else None
+        )
 
     def tokenize_count(self, text: str) -> int:
         return len(text.split())  # heuristic; engine exposes batch token stats only

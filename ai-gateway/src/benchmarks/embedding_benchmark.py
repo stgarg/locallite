@@ -129,7 +129,9 @@ def run(
                 "Create it and place model.onnx (and optional config.json, vocab.txt) there, or pass --model-path to override.\n"
                 f"Hint: expected file: {resolved_path}/model.onnx\n"
             )
-    be = OnnxEmbeddingBackend(model_id, resolved_path, spec.dimension, cache_size=256)
+        be = OnnxEmbeddingBackend(
+            model_id, resolved_path, spec.dimension, cache_size=256
+        )
     elif backend == "fastembed":  # pragma: no cover
         if FastEmbedBackend is None:
             raise SystemExit("fastembed library not installed")
@@ -186,6 +188,9 @@ def run(
                 "cache_hit_ratio": perf.get("cache_hit_ratio"),
                 "cache_hits": perf.get("cache_hits"),
                 "cache_misses": perf.get("cache_misses"),
+                # Token distribution percentiles if available
+                "p50_tokens_per_text": perf.get("p50_tokens_per_text"),
+                "p95_tokens_per_text": perf.get("p95_tokens_per_text"),
             }
         )
 
@@ -199,8 +204,8 @@ def run(
             "machine": platform.machine(),
         },
         "model_load_time_ms": load_ms,
-    "scenarios": results,
-    "tokenizer_version": results[0].get("tokenizer_version") if results else None,
+        "scenarios": results,
+        "tokenizer_version": results[0].get("tokenizer_version") if results else None,
     }
 
     print(json.dumps(artifact, indent=2))

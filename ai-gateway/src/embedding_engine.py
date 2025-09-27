@@ -308,8 +308,17 @@ class OptimizedEmbeddingEngine:
 
         # Token statistics
         attention_mask = batch_inputs["attention_mask"]
+        # Per-text token counts (attention mask row sum)
+        token_counts = attention_mask.sum(axis=1).astype(int).tolist()
         total_tokens = int(attention_mask.sum())
         avg_tokens = total_tokens / len(texts)
+        try:
+            # Distribution percentiles (defensive: small batches may duplicate values)
+            p50_tokens = float(np.percentile(token_counts, 50)) if token_counts else 0.0
+            p95_tokens = float(np.percentile(token_counts, 95)) if token_counts else 0.0
+        except Exception:
+            p50_tokens = avg_tokens
+            p95_tokens = avg_tokens
 
         # Performance metrics
         performance_info = {
@@ -322,8 +331,13 @@ class OptimizedEmbeddingEngine:
             "throughput_texts_per_sec": (
                 len(texts) / total_time if total_time > 0 else 0
             ),
+            # Token stats
             "total_tokens": total_tokens,
             "avg_tokens_per_text": avg_tokens,
+            "p50_tokens_per_text": p50_tokens,
+            "p95_tokens_per_text": p95_tokens,
+            "tokens_per_text": token_counts,
+            # Tokenizer provenance
             "tokenizer": self._tokenizer_name or "heuristic",
             "tokenizer_version": _transformers_version,
         }
