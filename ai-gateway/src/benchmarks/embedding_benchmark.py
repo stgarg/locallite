@@ -14,7 +14,6 @@ import pathlib
 import platform
 import statistics
 import sys
-import sys as _sys
 import time
 from pathlib import Path
 from typing import Dict, List
@@ -22,24 +21,26 @@ from typing import Dict, List
 # Ensure the parent 'src' directory is on sys.path when executed directly via a relative path
 _THIS_FILE = pathlib.Path(__file__).resolve()
 _SRC_DIR = _THIS_FILE.parents[1]
-if str(_SRC_DIR) not in _sys.path:
-    _sys.path.insert(0, str(_SRC_DIR))
+if str(_SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(_SRC_DIR))
 
 # Pre-flight dependency check (gives clearer error than deep stack trace)
 _REQUIRED = ["numpy", "onnxruntime"]
 _missing = [m for m in _REQUIRED if _importlib_util.find_spec(m) is None]
 if _missing:
-    _sys.stderr.write(
+    sys.stderr.write(
         "\n[benchmark] Missing required packages: "
         + ", ".join(_missing)
         + "\nInstall them (inside the active venv) with:\n    pip install -r ai-gateway/requirements.txt\n\n"
     )
     raise SystemExit(2)
 
+from runtime.embedding_backends.base import (  # type: ignore  # noqa: E402
+    EmbeddingResult,
+)
 from runtime.embedding_backends.onnx_backend import (  # type: ignore  # noqa: E402
     OnnxEmbeddingBackend,
 )
-from runtime.embedding_backends.base import EmbeddingResult  # type: ignore  # noqa: E402
 from runtime.model_registry import get_model  # type: ignore  # noqa: E402
 from runtime.utils.digest import digest_vectors  # type: ignore  # noqa: E402
 

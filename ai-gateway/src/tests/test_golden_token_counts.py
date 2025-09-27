@@ -1,8 +1,6 @@
 import os
-import pytest
 
-from runtime.embedding_backends.onnx_backend import OnnxEmbeddingBackend
-from runtime.model_registry import get_model
+import pytest
 
 try:
     from transformers import AutoTokenizer  # type: ignore
@@ -10,6 +8,9 @@ try:
     _TRANSFORMERS = True
 except Exception:  # pragma: no cover
     _TRANSFORMERS = False
+
+from runtime.embedding_backends.onnx_backend import OnnxEmbeddingBackend
+from runtime.model_registry import get_model
 
 # Golden corpus (order matters) — chosen to exercise punctuation, unicode, short/long variance
 GOLDEN_CORPUS = [
