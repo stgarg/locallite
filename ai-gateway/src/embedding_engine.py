@@ -29,7 +29,9 @@ class OptimizedEmbeddingEngine:
     - CPU: 4+ texts (more efficient for larger batches)
     """
 
-    def __init__(self, model_path: str, model_id: Optional[str] = None, max_length: int = 512):
+    def __init__(
+        self, model_path: str, model_id: Optional[str] = None, max_length: int = 512
+    ):
         self.model_path = model_path
         self.model_id = model_id
         self.max_length = max_length
@@ -76,23 +78,30 @@ class OptimizedEmbeddingEngine:
         # Create ARM64 optimized session options
         def create_optimized_options(provider_specific: bool = False):
             session_opts = ort.SessionOptions()
-            session_opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            session_opts.graph_optimization_level = (
+                ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            )
             session_opts.execution_mode = ort.ExecutionMode.ORT_PARALLEL
-            
+
             # ARM64 threading optimization
             import psutil
+
             cpu_cores = psutil.cpu_count(logical=False) or 4
             session_opts.intra_op_num_threads = cpu_cores
             session_opts.inter_op_num_threads = 2
-            
+
             # Memory optimizations
             session_opts.enable_cpu_mem_arena = True
             session_opts.enable_mem_pattern = True
-            
+
             if provider_specific:
-                session_opts.add_session_config_entry("session.intra_op.allow_spinning", "1")
-                session_opts.add_session_config_entry("session.force_spinning_stop", "1")
-                
+                session_opts.add_session_config_entry(
+                    "session.intra_op.allow_spinning", "1"
+                )
+                session_opts.add_session_config_entry(
+                    "session.force_spinning_stop", "1"
+                )
+
             return session_opts
 
         # CPU session (ARM64 optimized)
@@ -110,8 +119,9 @@ class OptimizedEmbeddingEngine:
         try:
             azure_opts = create_optimized_options(provider_specific=True)
             azure_session = ort.InferenceSession(
-                model_file, providers=["AzureExecutionProvider", "CPUExecutionProvider"],
-                sess_options=azure_opts
+                model_file,
+                providers=["AzureExecutionProvider", "CPUExecutionProvider"],
+                sess_options=azure_opts,
             )
 
             # Check if Azure provider is actually active
@@ -136,25 +146,39 @@ class OptimizedEmbeddingEngine:
         3. Legacy whitespace heuristic (only for emergency fallback)
         """
         if AutoTokenizer is None:
-            logger.warning("HF transformers not installed; using legacy whitespace heuristic tokenizer")
+            logger.warning(
+                "HF transformers not installed; using legacy whitespace heuristic tokenizer"
+            )
             return
         # Try local directory first
         local_dir = self.model_path
         use_source = None
         try:
-            if os.path.exists(os.path.join(local_dir, "tokenizer.json")) or os.path.exists(os.path.join(local_dir, "tokenizer.model")):
-                self._tokenizer = AutoTokenizer.from_pretrained(local_dir, local_files_only=True, trust_remote_code=False)
+            if os.path.exists(
+                os.path.join(local_dir, "tokenizer.json")
+            ) or os.path.exists(os.path.join(local_dir, "tokenizer.model")):
+                self._tokenizer = AutoTokenizer.from_pretrained(
+                    local_dir, local_files_only=True, trust_remote_code=False
+                )
                 use_source = local_dir
             elif self.model_id:
-                self._tokenizer = AutoTokenizer.from_pretrained(self.model_id, trust_remote_code=False)
+                self._tokenizer = AutoTokenizer.from_pretrained(
+                    self.model_id, trust_remote_code=False
+                )
                 use_source = self.model_id
-            if self._tokenizer is not None and not getattr(self._tokenizer, "is_fast", False):
-                logger.warning("Loaded tokenizer is not a fast tokenizer; performance may degrade")
+            if self._tokenizer is not None and not getattr(
+                self._tokenizer, "is_fast", False
+            ):
+                logger.warning(
+                    "Loaded tokenizer is not a fast tokenizer; performance may degrade"
+                )
             if self._tokenizer:
                 self._tokenizer_name = use_source
                 logger.info(f"Initialized tokenizer from {use_source}")
         except Exception as e:  # pragma: no cover
-            logger.warning(f"Failed to initialize HF tokenizer ({e}); falling back to whitespace heuristic")
+            logger.warning(
+                f"Failed to initialize HF tokenizer ({e}); falling back to whitespace heuristic"
+            )
             self._tokenizer = None
 
     def _tokenize_batch(self, texts: List[str]) -> Dict[str, np.ndarray]:
@@ -183,7 +207,9 @@ class OptimizedEmbeddingEngine:
             for text in texts:
                 tokens = ["[CLS]"] + text.lower().split()[: max_length - 2] + ["[SEP]"]
                 if self.vocab:
-                    token_ids = [self.vocab.get(t, self.vocab.get("[UNK]", 0)) for t in tokens]
+                    token_ids = [
+                        self.vocab.get(t, self.vocab.get("[UNK]", 0)) for t in tokens
+                    ]
                 else:
                     token_ids = [hash(t) % 30000 for t in tokens]
                 seq_len = len(token_ids)
@@ -209,7 +235,7 @@ class OptimizedEmbeddingEngine:
         Automatically select optimal provider based on batch size
 
         Rules optimized for WSL ARM64:
-        - Batch 1-3: CPU-ARM64 (optimized single/small batch performance)  
+        - Batch 1-3: CPU-ARM64 (optimized single/small batch performance)
         - Batch 4+:  Azure Provider (if available, otherwise CPU)
         """
         if batch_size <= self.NPU_OPTIMAL_BATCH_SIZE:
@@ -264,9 +290,7 @@ class OptimizedEmbeddingEngine:
             logger.error(f"Batch inference failed ({e}); falling back to per-text loop")
             # Fallback to legacy per-text loop (rare path)
             for i in range(len(texts)):
-                single_inputs = {
-                    k: v[i : i + 1] for k, v in run_inputs.items()
-                }
+                single_inputs = {k: v[i : i + 1] for k, v in run_inputs.items()}
                 try:
                     out = session.run(None, single_inputs)
                     cls = out[0][0, 0, :]
@@ -320,7 +344,8 @@ class OptimizedEmbeddingEngine:
             "vocab_size": len(self.vocab) if self.vocab else None,
             "providers": {
                 "cpu_available": self.session_cpu is not None,
-                "azure_available": self.session_npu is not None,  # Using session_npu for Azure
+                "azure_available": self.session_npu
+                is not None,  # Using session_npu for Azure
                 "cpu_providers": (
                     self.session_cpu.get_providers() if self.session_cpu else None
                 ),
@@ -336,7 +361,9 @@ class OptimizedEmbeddingEngine:
             },
             "performance_rules": {
                 "small_batch_provider": "CPU-ARM64 (1-3 texts)",
-                "large_batch_provider": f"Azure (4+ texts)" if self.session_npu else "CPU-ARM64",
+                "large_batch_provider": (
+                    f"Azure (4+ texts)" if self.session_npu else "CPU-ARM64"
+                ),
                 "selection_logic": "automatic based on batch size and WSL optimization",
             },
         }

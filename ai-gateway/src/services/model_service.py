@@ -90,7 +90,9 @@ class ModelService:
 
                 # Load based on model type
                 if model_type == "embeddings":
-                    model_instance = await self._load_embedding_model(model_id, model_path)
+                    model_instance = await self._load_embedding_model(
+                        model_id, model_path
+                    )
                 elif model_type == "chat":
                     model_instance = await self._load_chat_model(model_id, model_path)
                 else:

@@ -83,8 +83,9 @@ class HealthResponse(BaseModel):
 
 # Chat completion models
 class ChatMessage(BaseModel):
-    role: str = Field(..., description="Role of." \
-    " the message (system, user, assistant)")
+    role: str = Field(
+        ..., description="Role of." " the message (system, user, assistant)"
+    )
     content: str = Field(..., description="Content of the message")
 
 
@@ -129,8 +130,6 @@ class AppState:
         self.models_loaded: List[str] = []
 
 
-
-
 app_state = AppState()
 
 # Security
@@ -169,17 +168,30 @@ async def lifespan(app: FastAPI):
     embedding_model_path = os.getenv("EMBEDDING_MODEL_PATH")
     if not embedding_model_path:
         # Try co-located archived path first
-        candidate = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "EmbeddingServer", "models", "bge-small-en-v1.5"))
+        candidate = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "..",
+                "EmbeddingServer",
+                "models",
+                "bge-small-en-v1.5",
+            )
+        )
         if os.path.exists(os.path.join(candidate, "model.onnx")):
             embedding_model_path = candidate
         else:
             # Final fallback: models/ path under repo root
-            repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+            repo_root = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "..")
+            )
             alt = os.path.join(repo_root, "models", "bge-small-en-v1.5")
             embedding_model_path = alt
     logger.info(f"Using embedding model path: {embedding_model_path}")
     try:
-        embedding_loaded = await app_state.embedding_service.initialize(embedding_model_path)
+        embedding_loaded = await app_state.embedding_service.initialize(
+            embedding_model_path
+        )
         if embedding_loaded:
             app_state.models_loaded.append("bge-small-en-v1.5")
             logger.info("Embedding service initialized successfully")
@@ -356,11 +368,19 @@ async def create_embeddings(
             )
 
         try:
-            result = await app_state.embedding_service.process_embeddings(texts, model=request.model)
+            result = await app_state.embedding_service.process_embeddings(
+                texts, model=request.model
+            )
         except FileNotFoundError as fnf:
-            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Embedding model assets missing: {fnf}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Embedding model assets missing: {fnf}",
+            )
         except Exception as exc:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Embedding processing failed: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Embedding processing failed: {exc}",
+            )
 
         embeddings: List[EmbeddingData] = []
         for idx, embedding in enumerate(result.embeddings):
@@ -411,8 +431,8 @@ async def create_chat_completion(
         # Validate messages
         if not request.messages:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="Messages cannot be empty"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Messages cannot be empty",
             )
 
         # Convert Pydantic models to dicts for processing
@@ -474,7 +494,12 @@ async def root():
         "version": "1.0.0",
         "status": "running",
         "npu_available": app_state.npu_available,
-        "endpoints": ["/health", "/v1/models", "/v1/embeddings", "/v1/chat/completions"],
+        "endpoints": [
+            "/health",
+            "/v1/models",
+            "/v1/embeddings",
+            "/v1/chat/completions",
+        ],
     }
 
 

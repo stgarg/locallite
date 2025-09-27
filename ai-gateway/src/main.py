@@ -3,7 +3,7 @@
 AI Gateway - OpenAI-compatible API with NPU acceleration
 
 A production-ready API gateway that provides OpenAI-compatible endpoints for:
-- Text embeddings with NPU acceleration (bge-small-en-v1.5)  
+- Text embeddings with NPU acceleration (bge-small-en-v1.5)
 - Chat completions with Phi-3 Mini ONNX inference
 
 Features:
@@ -22,4 +22,5 @@ from model_router import app
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=False, log_level="info")

@@ -3,6 +3,7 @@
 Provides metadata for available models and a simple accessor.
 Later: load policies, lazy initialization, health status, dynamic refresh.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,8 +13,8 @@ from typing import Dict, Optional, List
 @dataclass
 class ModelSpec:
     model_id: str
-    task: str                 # 'embedding' | 'chat' | 'rerank' | 'vision'
-    backend: str              # 'onnx-custom' | 'fastembed' | 'hf-transformers' | 'gguf'
+    task: str  # 'embedding' | 'chat' | 'rerank' | 'vision'
+    backend: str  # 'onnx-custom' | 'fastembed' | 'hf-transformers' | 'gguf'
     dimension: Optional[int] = None
     path: Optional[str] = None
     license: Optional[str] = None

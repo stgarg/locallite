@@ -67,10 +67,15 @@ class GemmaChatModel(BaseChatModel):
                     f"Gemma embed_tokens ONNX not found: {embed_model_file}"
                 )
 
-            self.embed_session = ort.InferenceSession(embed_model_file, providers=providers)
-            self.embed_output_names = [out.name for out in self.embed_session.get_outputs()]
+            self.embed_session = ort.InferenceSession(
+                embed_model_file, providers=providers
+            )
+            self.embed_output_names = [
+                out.name for out in self.embed_session.get_outputs()
+            ]
             logger.info(
-                "Gemma embedding model loaded with providers: %s", self.embed_session.get_providers()
+                "Gemma embedding model loaded with providers: %s",
+                self.embed_session.get_providers(),
             )
 
             # Load decoder model
@@ -82,9 +87,13 @@ class GemmaChatModel(BaseChatModel):
                     f"Gemma decoder ONNX not found: {decoder_model_file}"
                 )
 
-            self.decoder_session = ort.InferenceSession(decoder_model_file, providers=providers)
+            self.decoder_session = ort.InferenceSession(
+                decoder_model_file, providers=providers
+            )
             self.providers = self.decoder_session.get_providers()
-            self.decoder_output_names = [out.name for out in self.decoder_session.get_outputs()]
+            self.decoder_output_names = [
+                out.name for out in self.decoder_session.get_outputs()
+            ]
             logger.info("Gemma decoder loaded with providers: %s", self.providers)
 
             self.is_loaded = True
@@ -105,7 +114,12 @@ class GemmaChatModel(BaseChatModel):
         self.is_loaded = False
 
     async def generate(self, request: UnifiedRequest) -> ChatGeneration:
-        if not self.is_loaded or not self.decoder_session or not self.embed_session or not self.tokenizer:
+        if (
+            not self.is_loaded
+            or not self.decoder_session
+            or not self.embed_session
+            or not self.tokenizer
+        ):
             raise RuntimeError("GemmaChatModel not loaded")
 
         messages: Sequence[Dict[str, Any]] = request.content.get("messages", [])
@@ -160,8 +174,12 @@ class GemmaChatModel(BaseChatModel):
                 break
 
             # Decode partial text to evaluate stop sequences
-            partial_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
-            truncated_text, stopped = self._apply_stop_sequences(partial_text, stop_sequences)
+            partial_text = self.tokenizer.decode(
+                generated_ids, skip_special_tokens=True
+            )
+            truncated_text, stopped = self._apply_stop_sequences(
+                partial_text, stop_sequences
+            )
             accumulated_text = truncated_text
             if stopped:
                 finish_reason = "stop"
@@ -180,10 +198,14 @@ class GemmaChatModel(BaseChatModel):
 
         else:
             finish_reason = "length"
-            accumulated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+            accumulated_text = self.tokenizer.decode(
+                generated_ids, skip_special_tokens=True
+            )
 
         if not accumulated_text:
-            accumulated_text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+            accumulated_text = self.tokenizer.decode(
+                generated_ids, skip_special_tokens=True
+            )
 
         metadata: Dict[str, Any] = {
             "providers": self.providers,
@@ -219,10 +241,9 @@ class GemmaChatModel(BaseChatModel):
         inputs_embeds, per_layer_inputs = embed_outputs
 
         seq_len = input_token_ids.shape[1]
-        position_ids = (
-            np.arange(position_offset, position_offset + seq_len, dtype=np.int64)
-            .reshape(1, seq_len)
-        )
+        position_ids = np.arange(
+            position_offset, position_offset + seq_len, dtype=np.int64
+        ).reshape(1, seq_len)
 
         decoder_inputs: Dict[str, np.ndarray] = {
             "inputs_embeds": inputs_embeds.astype(np.float32),
@@ -232,7 +253,9 @@ class GemmaChatModel(BaseChatModel):
 
         for layer_idx, (key_cache, value_cache) in enumerate(past_key_values):
             decoder_inputs[self.KEY_NAME_TEMPLATE.format(layer=layer_idx)] = key_cache
-            decoder_inputs[self.VALUE_NAME_TEMPLATE.format(layer=layer_idx)] = value_cache
+            decoder_inputs[self.VALUE_NAME_TEMPLATE.format(layer=layer_idx)] = (
+                value_cache
+            )
 
         outputs = self.decoder_session.run(self.decoder_output_names, decoder_inputs)
         output_map = dict(zip(self.decoder_output_names, outputs))
@@ -243,7 +266,9 @@ class GemmaChatModel(BaseChatModel):
         for layer_idx in range(self.NUM_LAYERS):
             next_key = output_map[self.PRESENT_KEY_TEMPLATE.format(layer=layer_idx)]
             next_value = output_map[self.PRESENT_VALUE_TEMPLATE.format(layer=layer_idx)]
-            next_past.append((next_key.astype(np.float32), next_value.astype(np.float32)))
+            next_past.append(
+                (next_key.astype(np.float32), next_value.astype(np.float32))
+            )
 
         return logits, next_past
 
@@ -259,7 +284,9 @@ class GemmaChatModel(BaseChatModel):
             )
         return empty
 
-    def _select_next_token(self, logits: np.ndarray, temperature: float, top_p: float) -> int:
+    def _select_next_token(
+        self, logits: np.ndarray, temperature: float, top_p: float
+    ) -> int:
         logits = logits[0].astype(np.float32)
 
         if temperature is None or temperature <= 0.0:

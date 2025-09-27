@@ -5,6 +5,7 @@ Policy:
 - Serialize as UTF-8 joined strings (faster + human-inspectable) OR raw bytes if needed later.
 - Hash with SHA256; expose short (32 hex chars) and full variants.
 """
+
 from __future__ import annotations
 
 from hashlib import sha256
@@ -17,7 +18,9 @@ def _round_vector(vec: Sequence[float]) -> List[float]:
     return [round(x, Precision) for x in vec]
 
 
-def digest_vectors(vectors: Iterable[Sequence[float]], short: bool = True, head_dims: int | None = None) -> str:
+def digest_vectors(
+    vectors: Iterable[Sequence[float]], short: bool = True, head_dims: int | None = None
+) -> str:
     """Return deterministic hash of sequence of embedding vectors.
 
     Args:
@@ -38,7 +41,11 @@ def digest_vectors(vectors: Iterable[Sequence[float]], short: bool = True, head_
     return h[:32] if short else h
 
 
-def compare_digest(vectors_a: Iterable[Sequence[float]], vectors_b: Iterable[Sequence[float]], tolerance: float = 1e-6) -> bool:
+def compare_digest(
+    vectors_a: Iterable[Sequence[float]],
+    vectors_b: Iterable[Sequence[float]],
+    tolerance: float = 1e-6,
+) -> bool:
     """Element-wise compare two embedding sets within tolerance.
 
     Returns True if shapes match and each absolute difference <= tolerance.
@@ -54,5 +61,6 @@ def compare_digest(vectors_a: Iterable[Sequence[float]], vectors_b: Iterable[Seq
             if abs(x - y) > tolerance:
                 return False
     return True
+
 
 __all__ = ["digest_vectors", "compare_digest"]

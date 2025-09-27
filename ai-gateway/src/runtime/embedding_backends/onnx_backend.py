@@ -1,4 +1,5 @@
 """ONNX-based embedding backend wrapping existing OptimizedEmbeddingEngine."""
+
 from __future__ import annotations
 
 from typing import List

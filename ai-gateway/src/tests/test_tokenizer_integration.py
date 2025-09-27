@@ -6,6 +6,7 @@ from runtime.model_registry import get_model
 
 try:
     from transformers import AutoTokenizer  # type: ignore
+
     _TRANSFORMERS = True
 except Exception:  # pragma: no cover
     _TRANSFORMERS = False

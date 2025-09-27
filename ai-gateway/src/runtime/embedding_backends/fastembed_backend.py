@@ -2,6 +2,7 @@
 
 This backend is optional; it gracefully degrades if fastembed is missing.
 """
+
 from __future__ import annotations
 
 from typing import List

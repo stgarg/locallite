@@ -24,6 +24,7 @@ Usage:
 
 If HF tokenizer cannot be loaded, script will mark that mode as unavailable.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -49,8 +50,10 @@ def load_hf_tokenizer(model_id: str) -> Optional[Callable[[str], List[int]]]:
         fast = tok if hasattr(tok, "_tokenizer") else None  # ensure fast tokenizer
         if fast is None:
             return None
+
         def encode(s: str) -> List[int]:  # noqa: D401
             return fast.encode(s, add_special_tokens=True)
+
         return encode
     except Exception:
         return None
@@ -72,7 +75,9 @@ def percentile(data: List[float], p: float) -> float:
     return s[f] * (c - k) + s[c] * (k - f)
 
 
-def time_mode(name: str, texts: List[str], tokenize_fn: Callable[[str], List]) -> Dict[str, object]:
+def time_mode(
+    name: str, texts: List[str], tokenize_fn: Callable[[str], List]
+) -> Dict[str, object]:
     start_all = time.perf_counter()
     token_counts: List[int] = []
     per_text_times: List[float] = []
@@ -96,7 +101,9 @@ def time_mode(name: str, texts: List[str], tokenize_fn: Callable[[str], List]) -
     }
 
 
-def run(runs: int, discard: int, texts: List[str], hf_model: Optional[str]) -> Dict[str, object]:
+def run(
+    runs: int, discard: int, texts: List[str], hf_model: Optional[str]
+) -> Dict[str, object]:
     results: List[Dict[str, object]] = []
 
     # Heuristic mode aggregated timing (single run, per-text internal timing)
@@ -123,16 +130,24 @@ def run(runs: int, discard: int, texts: List[str], hf_model: Optional[str]) -> D
 def main():  # pragma: no cover
     parser = argparse.ArgumentParser(description="Tokenizer benchmark comparison")
     parser.add_argument("--inputs", required=True, help="Path to benchmark_inputs.txt")
-    parser.add_argument("--hf-tokenizer", help="HF model id for tokenizer (e.g. BAAI/bge-small-en-v1.5)")
-    parser.add_argument("--runs", type=int, default=1, help="Reserved for future multi-run aggregation")
-    parser.add_argument("--discard-warmup", type=int, default=0, help="Reserved warmup discard")
+    parser.add_argument(
+        "--hf-tokenizer", help="HF model id for tokenizer (e.g. BAAI/bge-small-en-v1.5)"
+    )
+    parser.add_argument(
+        "--runs", type=int, default=1, help="Reserved for future multi-run aggregation"
+    )
+    parser.add_argument(
+        "--discard-warmup", type=int, default=0, help="Reserved warmup discard"
+    )
     parser.add_argument("--out", help="Write JSON artifact path")
     args = parser.parse_args()
 
     path = Path(args.inputs)
     if not path.exists():
         raise SystemExit(f"Inputs file not found: {path}")
-    texts = [l.strip() for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    texts = [
+        l.strip() for l in path.read_text(encoding="utf-8").splitlines() if l.strip()
+    ]
     artifact = run(args.runs, args.discard_warmup, texts, args.hf_tokenizer)
     print(json.dumps(artifact, indent=2))
     if args.out:

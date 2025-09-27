@@ -3,6 +3,7 @@
 Measures latency distribution, throughput, and deterministic digest for drift detection.
 Intended for internal regression monitoring (not end-user marketing output).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,6 +40,7 @@ if _missing:
 from runtime.model_registry import get_model  # type: ignore  # noqa: E402
 from runtime.embedding_backends.onnx_backend import OnnxEmbeddingBackend  # type: ignore  # noqa: E402
 from runtime.utils.digest import digest_vectors  # type: ignore  # noqa: E402
+
 try:  # pragma: no cover - optional dep
     from runtime.embedding_backends.fastembed_backend import FastEmbedBackend  # type: ignore
 except Exception:  # pragma: no cover
@@ -101,7 +103,17 @@ def resolve_model_path(spec_path: str | None) -> str:
     return str(candidate)
 
 
-def run(model_id: str, backend: str, inputs: List[str], batch_sizes: List[int], runs: int, discard_warmup: int, digest_inputs: List[str], out: Path | None, model_path_override: str | None = None):
+def run(
+    model_id: str,
+    backend: str,
+    inputs: List[str],
+    batch_sizes: List[int],
+    runs: int,
+    discard_warmup: int,
+    digest_inputs: List[str],
+    out: Path | None,
+    model_path_override: str | None = None,
+):
     spec = get_model(model_id)
     if not spec:
         raise SystemExit(f"Model not found: {model_id}")
@@ -132,11 +144,15 @@ def run(model_id: str, backend: str, inputs: List[str], batch_sizes: List[int], 
             continue
         # Warmup single run (populate tokenizer caches etc.)
         be.embed(subset)
-        timings = run_timed(lambda: be.embed(subset), repeat=runs, discard=discard_warmup)
+        timings = run_timed(
+            lambda: be.embed(subset), repeat=runs, discard=discard_warmup
+        )
         vectors = be.embed(subset)
         perf = getattr(be, "last_perf", lambda: None)() or {}
         digest = digest_vectors(vectors, short=True, head_dims=8)
-        zero_or_nan = sum(1 for v in vectors for x in v if (x == 0.0 or (x != x)))  # NaN check via x!=x
+        zero_or_nan = sum(
+            1 for v in vectors for x in v if (x == 0.0 or (x != x))
+        )  # NaN check via x!=x
         results.append(
             {
                 "batch_size": batch,
@@ -146,7 +162,9 @@ def run(model_id: str, backend: str, inputs: List[str], batch_sizes: List[int], 
                 "p50_ms": timings["p50_ms"],
                 "p95_ms": timings["p95_ms"],
                 "per_text_mean_ms": timings["mean_ms"] / batch if batch else 0.0,
-                "throughput_texts_per_sec": (batch / (timings["mean_ms"] / 1000)) if timings["mean_ms"] else 0.0,
+                "throughput_texts_per_sec": (
+                    (batch / (timings["mean_ms"] / 1000)) if timings["mean_ms"] else 0.0
+                ),
                 "dimension": len(vectors[0]) if vectors else 0,
                 "digest": digest,
                 "zero_or_nan_count": zero_or_nan,
@@ -154,8 +172,10 @@ def run(model_id: str, backend: str, inputs: List[str], batch_sizes: List[int], 
                 "avg_tokens_per_text": perf.get("avg_tokens_per_text"),
                 "total_tokens": perf.get("total_tokens"),
                 "tokens_per_sec": (
-                    (perf.get("total_tokens") or 0) / (timings["mean_ms"] / 1000)
-                ) if timings["mean_ms"] else 0.0,
+                    ((perf.get("total_tokens") or 0) / (timings["mean_ms"] / 1000))
+                    if timings["mean_ms"]
+                    else 0.0
+                ),
                 "tokenizer": perf.get("tokenizer"),
             }
         )
@@ -183,25 +203,50 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Embedding benchmark harness")
     parser.add_argument("--model", default="bge-small-en-v1.5")
     parser.add_argument("--backend", default="onnx-custom")
-    parser.add_argument("--inputs", default=str(Path(__file__).with_name("benchmark_inputs.txt")))
-    parser.add_argument("--batch-sizes", default="1,2,4,8", help="Comma list of batch sizes")
-    parser.add_argument("--runs", type=int, default=5, help="Timed runs per batch size (excluding warmup)")
-    parser.add_argument("--discard-warmup", type=int, default=1, help="Discard first N timed runs")
-    parser.add_argument("--digest-inputs", default=str(Path(__file__).with_name("digest_inputs.txt")))
+    parser.add_argument(
+        "--inputs", default=str(Path(__file__).with_name("benchmark_inputs.txt"))
+    )
+    parser.add_argument(
+        "--batch-sizes", default="1,2,4,8", help="Comma list of batch sizes"
+    )
+    parser.add_argument(
+        "--runs",
+        type=int,
+        default=5,
+        help="Timed runs per batch size (excluding warmup)",
+    )
+    parser.add_argument(
+        "--discard-warmup", type=int, default=1, help="Discard first N timed runs"
+    )
+    parser.add_argument(
+        "--digest-inputs", default=str(Path(__file__).with_name("digest_inputs.txt"))
+    )
     parser.add_argument("--out", type=str, help="Write JSON artifact to path")
-    parser.add_argument("--model-path", type=str, help="Override model directory (containing model.onnx)")
+    parser.add_argument(
+        "--model-path",
+        type=str,
+        help="Override model directory (containing model.onnx)",
+    )
     args = parser.parse_args()
 
     inputs_path = Path(args.inputs)
     if not inputs_path.exists():
         raise SystemExit(f"Inputs file not found: {inputs_path}")
-    lines = [l.strip() for l in inputs_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [
+        l.strip()
+        for l in inputs_path.read_text(encoding="utf-8").splitlines()
+        if l.strip()
+    ]
     if not lines:
         raise SystemExit("No inputs found in benchmark file")
 
     digest_path = Path(args.digest_inputs)
     if digest_path.exists():
-        digest_inputs = [l.strip() for l in digest_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        digest_inputs = [
+            l.strip()
+            for l in digest_path.read_text(encoding="utf-8").splitlines()
+            if l.strip()
+        ]
     else:
         digest_inputs = lines[:5]
 

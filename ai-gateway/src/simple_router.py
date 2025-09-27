@@ -80,16 +80,42 @@ class ChatModel:
         try:
             # Generate smart response based on context
             response_text = self._generate_smart_response(messages)
-            
+
             # Simulate some processing time (realistic for local inference)
             import time
+
             time.sleep(0.1)  # Brief pause to simulate processing
-            
+
             # Estimate tokens (rough approximation)
             prompt_text = " ".join([msg.get("content", "") for msg in messages])
             prompt_tokens = len(prompt_text.split()) * 1.3  # Rough token estimate
             completion_tokens = len(response_text.split()) * 1.3
-            
+
+            return UnifiedResponse(
+                id=request.id,
+                request_type=request.request_type,
+                model_id="phi-3-mini-4k",
+                content={
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": response_text},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                    "usage": {
+                        "prompt_tokens": int(prompt_tokens),
+                        "completion_tokens": int(completion_tokens),
+                        "total_tokens": int(prompt_tokens + completion_tokens),
+                    },
+                },
+                tokens_used=int(prompt_tokens + completion_tokens),
+            )
+
+        except Exception as e:
+            logger.error(f"Chat completion error: {e}")
+
+            # Fallback response
             return UnifiedResponse(
                 id=request.id,
                 request_type=request.request_type,
@@ -100,55 +126,19 @@ class ChatModel:
                             "index": 0,
                             "message": {
                                 "role": "assistant",
-                                "content": response_text
+                                "content": "I'm your local AI assistant. I encountered an issue processing that request, but I'm still here to help!",
                             },
-                            "finish_reason": "stop"
+                            "finish_reason": "stop",
                         }
                     ],
                     "usage": {
-                        "prompt_tokens": int(prompt_tokens),
-                        "completion_tokens": int(completion_tokens),
-                        "total_tokens": int(prompt_tokens + completion_tokens)
-                    }
+                        "prompt_tokens": 20,
+                        "completion_tokens": 15,
+                        "total_tokens": 35,
+                    },
                 },
-                tokens_used=int(prompt_tokens + completion_tokens)
+                tokens_used=35,
             )
-            
-        except Exception as e:
-            logger.error(f"Chat completion error: {e}")
-            
-            # Fallback response
-            return UnifiedResponse(
-                id=request.id,
-                request_type=request.request_type,
-                model_id="phi-3-mini-4k", 
-                content={
-                    "choices": [
-                        {
-                            "index": 0,
-                            "message": {
-                                "role": "assistant", 
-                                "content": "I'm your local AI assistant. I encountered an issue processing that request, but I'm still here to help!"
-                            },
-                            "finish_reason": "stop"
-                        }
-                    ],
-                    "usage": {"prompt_tokens": 20, "completion_tokens": 15, "total_tokens": 35}
-                },
-                tokens_used=35
-            )
-                        "message": {"role": "assistant", "content": response_text},
-                        "finish_reason": "stop",
-                    }
-                ],
-                "usage": {
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": prompt_tokens + completion_tokens,
-                },
-            },
-            tokens_used=prompt_tokens + completion_tokens,
-        )
 
     def _build_prompt_from_messages(self, messages: List[Dict]) -> str:
         """Convert chat messages to a single prompt string"""

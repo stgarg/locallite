@@ -48,6 +48,7 @@ class UnifiedResponse:
     tokens_used: int = 0
     processing_time: float = 0.0
 
+
 """Module public API."""
 __all__ = [
     "ModelType",
