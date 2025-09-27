@@ -46,6 +46,7 @@ Structure mirrors a simple project management hierarchy without external tooling
 | T21| F6 | Mini CI benchmark (reduced-run) | In Progress | Added tests/test_mini_perf_guardrails.py (digest baseline, perf thresholds, cache ratio); provider routing check pending |
 | T22| F5 | Chat tokenizer unification | Planned | Reuse HF tokenizer provider |
 | T23| F3 | Add p50/p95 tokenize_time metrics | In Progress | Per-text token percentiles added (p50/p95); tokenize_time aggregation pending |
+| T25| F5 | Basic chat generation test | Todo | Verify Gemma chat path end-to-end |
 | T24| F? | DSPy evaluation write-up | Deferred | See DSPy note |
 
 | T14| F2 | Wire registry into /v1/models + add /v1/models/registry | Done |
