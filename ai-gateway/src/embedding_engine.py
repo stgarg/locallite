@@ -14,8 +14,10 @@ import onnxruntime as ort
 
 try:  # Optional dependency for accurate tokenization
     from transformers import AutoTokenizer  # type: ignore
+    from transformers import __version__ as _transformers_version  # type: ignore
 except Exception:  # pragma: no cover
     AutoTokenizer = None  # type: ignore
+    _transformers_version = None  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -323,6 +325,7 @@ class OptimizedEmbeddingEngine:
             "total_tokens": total_tokens,
             "avg_tokens_per_text": avg_tokens,
             "tokenizer": self._tokenizer_name or "heuristic",
+            "tokenizer_version": _transformers_version,
         }
 
         logger.debug(

@@ -39,6 +39,7 @@ if _missing:
 from runtime.embedding_backends.onnx_backend import (  # type: ignore  # noqa: E402
     OnnxEmbeddingBackend,
 )
+from runtime.embedding_backends.base import EmbeddingResult  # type: ignore  # noqa: E402
 from runtime.model_registry import get_model  # type: ignore  # noqa: E402
 from runtime.utils.digest import digest_vectors  # type: ignore  # noqa: E402
 
@@ -128,7 +129,7 @@ def run(
                 "Create it and place model.onnx (and optional config.json, vocab.txt) there, or pass --model-path to override.\n"
                 f"Hint: expected file: {resolved_path}/model.onnx\n"
             )
-        be = OnnxEmbeddingBackend(model_id, resolved_path, spec.dimension)
+    be = OnnxEmbeddingBackend(model_id, resolved_path, spec.dimension, cache_size=256)
     elif backend == "fastembed":  # pragma: no cover
         if FastEmbedBackend is None:
             raise SystemExit("fastembed library not installed")
@@ -146,12 +147,13 @@ def run(
         if not subset:
             continue
         # Warmup single run (populate tokenizer caches etc.)
-        be.embed(subset)
+        warm = be.embed(subset)  # warmup
         timings = run_timed(
             lambda: be.embed(subset), repeat=runs, discard=discard_warmup
         )
-        vectors = be.embed(subset)
-        perf = getattr(be, "last_perf", lambda: None)() or {}
+        result: EmbeddingResult = be.embed(subset)
+        vectors = result.vectors
+        perf = result.perf or {}
         digest = digest_vectors(vectors, short=True, head_dims=8)
         zero_or_nan = sum(
             1 for v in vectors for x in v if (x == 0.0 or (x != x))
@@ -180,6 +182,10 @@ def run(
                     else 0.0
                 ),
                 "tokenizer": perf.get("tokenizer"),
+                "tokenizer_version": perf.get("tokenizer_version"),
+                "cache_hit_ratio": perf.get("cache_hit_ratio"),
+                "cache_hits": perf.get("cache_hits"),
+                "cache_misses": perf.get("cache_misses"),
             }
         )
 
@@ -193,7 +199,8 @@ def run(
             "machine": platform.machine(),
         },
         "model_load_time_ms": load_ms,
-        "scenarios": results,
+    "scenarios": results,
+    "tokenizer_version": results[0].get("tokenizer_version") if results else None,
     }
 
     print(json.dumps(artifact, indent=2))
