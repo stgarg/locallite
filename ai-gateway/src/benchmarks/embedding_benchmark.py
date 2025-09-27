@@ -7,18 +7,17 @@ Intended for internal regression monitoring (not end-user marketing output).
 from __future__ import annotations
 
 import argparse
+import importlib.util as _importlib_util
 import json
 import os
+import pathlib
 import platform
 import statistics
 import sys
+import sys as _sys
 import time
 from pathlib import Path
 from typing import Dict, List
-
-import pathlib
-import sys as _sys
-import importlib.util as _importlib_util
 
 # Ensure the parent 'src' directory is on sys.path when executed directly via a relative path
 _THIS_FILE = pathlib.Path(__file__).resolve()
@@ -37,12 +36,16 @@ if _missing:
     )
     raise SystemExit(2)
 
+from runtime.embedding_backends.onnx_backend import (  # type: ignore  # noqa: E402
+    OnnxEmbeddingBackend,
+)
 from runtime.model_registry import get_model  # type: ignore  # noqa: E402
-from runtime.embedding_backends.onnx_backend import OnnxEmbeddingBackend  # type: ignore  # noqa: E402
 from runtime.utils.digest import digest_vectors  # type: ignore  # noqa: E402
 
 try:  # pragma: no cover - optional dep
-    from runtime.embedding_backends.fastembed_backend import FastEmbedBackend  # type: ignore
+    from runtime.embedding_backends.fastembed_backend import (
+        FastEmbedBackend,  # type: ignore
+    )
 except Exception:  # pragma: no cover
     FastEmbedBackend = None  # type: ignore
 

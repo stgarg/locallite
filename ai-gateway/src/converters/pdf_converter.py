@@ -5,11 +5,12 @@ Converts PDF files to structured text using pypdf
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from pypdf import PdfReader
-from PIL import Image
-import pytesseract
+from typing import Any, Dict, List, Optional
+
 import polars as pl
+import pytesseract
+from PIL import Image
+from pypdf import PdfReader
 
 logger = logging.getLogger(__name__)
 

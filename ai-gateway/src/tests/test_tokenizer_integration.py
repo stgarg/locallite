@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 from runtime.embedding_backends.onnx_backend import OnnxEmbeddingBackend

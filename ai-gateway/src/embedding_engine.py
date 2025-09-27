@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import onnxruntime as ort

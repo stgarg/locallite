@@ -15,8 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
+from runtime.model_registry import MODEL_REGISTRY
+from runtime.model_registry import list_models as registry_list_models
 from services import ChatService, EmbeddingService, MetricsService, ModelService
-from runtime.model_registry import MODEL_REGISTRY, list_models as registry_list_models
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

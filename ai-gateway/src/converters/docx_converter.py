@@ -5,10 +5,11 @@ Converts Microsoft Word documents to structured text using python-docx and Polar
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
+import polars as pl
 from docx import Document
 from docx.shared import Inches
-import polars as pl
 
 logger = logging.getLogger(__name__)
 

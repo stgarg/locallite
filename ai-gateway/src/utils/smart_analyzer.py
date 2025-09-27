@@ -3,9 +3,10 @@ Enhanced Document Analysis using Polars
 Superior alternative to Docling for document structure analysis
 """
 
-import polars as pl
-from typing import Dict, List, Any
 import re
+from typing import Any, Dict, List
+
+import polars as pl
 
 
 class SmartDocumentAnalyzer:

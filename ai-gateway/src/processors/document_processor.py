@@ -5,20 +5,21 @@ Unified processor for handling multiple document formats using Polars for analys
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Union
+from typing import Any, Dict, List, Optional, Union
+
 import polars as pl
 
 # Import converters - handle both relative and absolute imports
 try:
-    from ..converters import PDFConverter, DOCXConverter, ImageConverter
+    from ..converters import DOCXConverter, ImageConverter, PDFConverter
 except ImportError:
     # If relative import fails, try absolute import
     try:
-        from converters import PDFConverter, DOCXConverter, ImageConverter
+        from converters import DOCXConverter, ImageConverter, PDFConverter
     except ImportError:
-        from converters.pdf_converter import PDFConverter
         from converters.docx_converter import DOCXConverter
         from converters.image_converter import ImageConverter
+        from converters.pdf_converter import PDFConverter
 
 logger = logging.getLogger(__name__)
 

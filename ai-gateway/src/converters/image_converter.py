@@ -5,10 +5,11 @@ Converts images to text using OCR (pytesseract) with Polars analysis
 
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from PIL import Image
-import pytesseract
+from typing import Any, Dict, List, Optional
+
 import polars as pl
+import pytesseract
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
