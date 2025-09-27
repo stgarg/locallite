@@ -1,0 +1,13 @@
+{
+  "model_id": "bge-small-en-v1.5",
+  "texts": [
+    "mini perf guardrail one",
+    "second short text"
+  ],
+  "head_dims": 16,
+  "short_digest": "1bdd556913c7f2ad2bda59e71ab6753b",
+  "tokenizer_version": "4.56.2",
+  "tokenizer": "models/bge-small-en-v1.5",
+  "captured_at": "2025-09-27T00:00:00Z",
+  "notes": "Baseline digest for mini perf guardrail; update only with intentional model/tokenizer change."
+}

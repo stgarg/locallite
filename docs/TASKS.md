@@ -43,7 +43,7 @@ Structure mirrors a simple project management hierarchy without external tooling
 | T18| F6 | Tokenizer version + model revision emission | In Progress | tokenizer_version emitted; revision pending |
 | T19| F4 | LRU embedding cache layer | In Progress | Implemented in OnnxEmbeddingBackend (cache_size param) |
 | T20| F4 | Provider routing heuristics | Planned | Token-aware NPU vs CPU thresholds |
-| T21| F6 | Mini CI benchmark (reduced-run) | Planned | Throughput + digest + tokens guardrails |
+| T21| F6 | Mini CI benchmark (reduced-run) | In Progress | Added tests/test_mini_perf_guardrails.py (digest baseline, perf thresholds, cache ratio); provider routing check pending |
 | T22| F5 | Chat tokenizer unification | Planned | Reuse HF tokenizer provider |
 | T23| F3 | Add p50/p95 tokenize_time metrics | In Progress | Per-text token percentiles added (p50/p95); tokenize_time aggregation pending |
 | T24| F? | DSPy evaluation write-up | Deferred | See DSPy note |
