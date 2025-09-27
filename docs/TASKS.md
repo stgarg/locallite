@@ -42,7 +42,7 @@ Structure mirrors a simple project management hierarchy without external tooling
 | T17| F6 | Golden corpus token count test | Done | Strict guardrail (0 drift) added tests/test_golden_token_counts.py |
 | T18| F6 | Tokenizer version + model revision emission | In Progress | tokenizer_version emitted; revision pending |
 | T19| F4 | LRU embedding cache layer | In Progress | Implemented in OnnxEmbeddingBackend (cache_size param) |
-| T20| F4 | Provider routing heuristics | Planned | Token-aware NPU vs CPU thresholds |
+| T20| F4 | Provider routing heuristics | In Progress | Added test_provider_routing.py asserting batch-size heuristic |
 | T21| F6 | Mini CI benchmark (reduced-run) | In Progress | Added tests/test_mini_perf_guardrails.py (digest baseline, perf thresholds, cache ratio); provider routing check pending |
 | T22| F5 | Chat tokenizer unification | Planned | Reuse HF tokenizer provider |
 | T23| F3 | Add p50/p95 tokenize_time metrics | In Progress | Per-text token percentiles added (p50/p95); tokenize_time aggregation pending |

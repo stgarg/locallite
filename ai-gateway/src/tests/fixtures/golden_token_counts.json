@@ -1,0 +1,17 @@
+{
+  "model_id": "bge-small-en-v1.5",
+  "tokenizer_version": "4.56.2",
+  "corpus": [
+    "Hello world!",
+    "Fast tokenization should be deterministic.",
+    "Whitespace  tokenizer   vs.  HF fast tokenizer -- which wins?",
+    "Unicode test: naïve café 😊",
+    "Numbers and symbols: 12345, 67.89%; $ & ( ) [ ]",
+    "Short",
+    "The quick brown fox jumps over the lazy dog",
+    "Edge-case---punctuation!!! with... ellipses?? and dashes—yes."
+  ],
+  "tokens_per_text": [5, 11, 18, 8, 20, 3, 11, 29],
+  "captured_at": "2025-09-27T00:00:00Z",
+  "notes": "Golden token counts for strict drift detection. Update only with TOKEN_UPDATE_GOLDEN=1 after intentional tokenizer/model change."
+}
